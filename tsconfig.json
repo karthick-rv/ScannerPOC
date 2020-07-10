@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "jsx": "react",
+    "lib": [
+      "es6"
+    ],
+    "moduleResolution": "node",
+    "strict": true,
+    "target": "es6",
+    "outDir": "artifacts",
+    "rootDir": "src",
+    "noImplicitAny": false,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "noImplicitReturns": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "strictNullChecks": false,
+    "experimentalDecorators": true,
+    "typeRoots": [
+      "private_types",
+      "node_modules/@types"
+    ]
+  },
+  "include": [
+    "typings/index.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "android",
+    "ios",
+    "artifacts",
+    "node_modules",
+    "App",
+    "*.jsbundle",
+    "*.jsbundle.meta",
+    "index.js",
+    "index.ios.js",
+    "Utility",
+    "tools",
+    "libs"
+  ],
+  "compileOnSave": false
+}
