@@ -1,1 +1,27 @@
 node_modules
+
+# Android/IntelliJ
+**/android/build/
+**/android/app/build/
+**/android/bin/build/
+.idea
+.gradle
+local.properties
+*.iml
+*.classpath
+*.project
+*.core.pref
+
+
+
+# Pods
+ios/Pods
+
+ios/build/
+
+
+android/.project
+android/.settings/org.eclipse.buildship.core.prefs
+android/app/.classpath
+android/app/.project
+android/app/.settings/org.eclipse.buildship.core.prefs
