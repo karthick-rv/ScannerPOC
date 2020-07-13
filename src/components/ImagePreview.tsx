@@ -1,8 +1,33 @@
-import React from 'react';
-import {RouteProp} from '@react-navigation/native';
+import React from "react";
+import { RouteProp } from "@react-navigation/native";
 
-import {Image, TouchableOpacity, View, Text} from 'react-native';
-import {StackNavigationProp} from '@react-navigation/stack';
+import { Image, TouchableOpacity, View, Text, StyleSheet } from "react-native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import RNFetchBlob from "rn-fetch-blob";
+import Spinner from "react-native-loading-spinner-overlay";
+import { ReceiptDataJson } from "../interfaces/receipt_data";
+
+const styles = StyleSheet.create({
+  btnAnalyze: {
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#30CCD7",
+  },
+  btnBack: {
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#007EA3",
+  },
+  spinnerTextStyle: {
+    color: "#FFF",
+  },
+});
+
+interface Previewtate {
+  isLoading: boolean;
+}
 
 interface PreviewProps {
   navigation: StackNavigationProp<any>;
@@ -10,39 +35,66 @@ interface PreviewProps {
 }
 
 const receiptUrl =
-  'https://docs.microsoft.com/azure/cognitive-services/form-recognizer/media/contoso-allinone.jpg';
+  "https://docs.microsoft.com/azure/cognitive-services/form-recognizer/media/contoso-allinone.jpg";
 
-export default class ImagePreview extends React.Component<PreviewProps, {}> {
-  async analyzeReceipt(imagUri: String) {
-    const image = {
-      uri: imagUri,
-      name: 'image.jpg',
-      type: 'image/jpeg',
+export default class ImagePreview extends React.Component<
+  PreviewProps,
+  Previewtate
+> {
+  constructor(props: PreviewProps) {
+    super(props);
+    this.state = {
+      isLoading: false,
+    };
+  }
+
+  async analyzeReceipt(imagUri: string) {
+    const url = "http://192.168.43.18:8626/api/receipt";
+
+    const headers = {
+      "Content-Type": "multipart/form-data",
     };
 
-    const data = new FormData();
-    data.append('receiptImage', image);
-    data.append('receiptUrl', receiptUrl);
-
-    const settings = {
-      method: 'POST',
-      body: data,
-      headers: {
-        'Content-Type': 'multipart/form-data',
+    const body: any[] = [
+      {
+        name: "receiptImage",
+        filename: "photo.jpg",
+        type: "image/png",
+        data: RNFetchBlob.wrap(imagUri),
       },
-    };
-    try {
-      const fetchResponse = await fetch(
-        `http://192.168.43.18:8626/api/receipt`,
-        settings,
-      );
-      console.log('DATA', fetchResponse);
-      const data = await fetchResponse.json();
-      return data;
-    } catch (e) {
-      console.log('ERROR', e);
-      return e;
-    }
+      {
+        name: "receiptUrl",
+        data: receiptUrl,
+      },
+    ];
+    const promise = new Promise<string>((resolve, reject) => {
+      RNFetchBlob.fetch("POST", url, headers, body)
+        .then((resp) => {
+          console.log(resp.text());
+          resolve(resp.text());
+        })
+        .catch((err) => {
+          console.log(err);
+          reject(err);
+        });
+    });
+    return promise;
+  }
+
+  public getReceiptData(imagUri: string) {
+    this.setState({ isLoading: true });
+    this.analyzeReceipt(imagUri)
+      .then((response: string) => {
+        this.setState({ isLoading: false });
+        const responseObj: ReceiptDataJson = JSON.parse(response);
+        this.props.navigation.navigate("ReceiptData", {
+          dataResponse: responseObj,
+        });
+      })
+      .catch((error) => {
+        this.setState({ isLoading: false });
+        console.log("Error", error);
+      });
   }
 
   private onPressBack = () => {
@@ -50,30 +102,29 @@ export default class ImagePreview extends React.Component<PreviewProps, {}> {
   };
 
   render() {
-    const {imagUri} = this.props.route.params as {imagUri: string};
+    const { imagUri } = this.props.route.params as { imagUri: string };
 
     return (
-      <View style={{flex: 1, backgroundColor: 'rgba(0, 0, 0, 0)'}}>
-        {imagUri && <Image source={{uri: imagUri}} style={{flex: 1}}></Image>}
+      <View style={{ flex: 1, backgroundColor: "rgba(0, 0, 0, 0)" }}>
+        <Spinner
+          //visibility of Overlay Loading Spinner
+          visible={this.state.isLoading}
+          //Text with the Spinner
+          textContent={"Loading..."}
+          //Text style of the Spinner Text
+          textStyle={styles.spinnerTextStyle}
+        />
+        {imagUri && (
+          <Image source={{ uri: imagUri }} style={{ flex: 1 }}></Image>
+        )}
         <TouchableOpacity
-          style={{
-            height: 50,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#30CCD7',
-          }}
-          onPress={() => this.analyzeReceipt(imagUri)}>
-          <Text>{'Analyze'}</Text>
+          style={styles.btnAnalyze}
+          onPress={() => this.getReceiptData(imagUri)}
+        >
+          <Text>{"Analyze"}</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            height: 50,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#007EA3',
-          }}
-          onPress={this.onPressBack}>
-          <Text>{'Back'}</Text>
+        <TouchableOpacity style={styles.btnBack} onPress={this.onPressBack}>
+          <Text>{"Back"}</Text>
         </TouchableOpacity>
       </View>
     );
